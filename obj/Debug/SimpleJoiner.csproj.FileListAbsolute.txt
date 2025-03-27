@@ -1,0 +1,14 @@
+C:\Users\mwa73\Documents\SimpleJoiner\obj\Debug\SimpleJoiner.csproj.AssemblyReference.cache
+C:\Users\mwa73\Documents\SimpleJoiner\bin\Debug\SimpleJoiner.exe.config
+C:\Users\mwa73\Documents\SimpleJoiner\bin\Debug\SimpleJoiner.exe
+C:\Users\mwa73\Documents\SimpleJoiner\bin\Debug\SimpleJoiner.pdb
+C:\Users\mwa73\Documents\SimpleJoiner\bin\Debug\MetroFramework.Design.dll
+C:\Users\mwa73\Documents\SimpleJoiner\bin\Debug\MetroFramework.dll
+C:\Users\mwa73\Documents\SimpleJoiner\bin\Debug\MetroFramework.Fonts.dll
+C:\Users\mwa73\Documents\SimpleJoiner\obj\Debug\SimpleJoiner.MainForm.resources
+C:\Users\mwa73\Documents\SimpleJoiner\obj\Debug\SimpleJoiner.Properties.Resources.resources
+C:\Users\mwa73\Documents\SimpleJoiner\obj\Debug\SimpleJoiner.csproj.GenerateResource.cache
+C:\Users\mwa73\Documents\SimpleJoiner\obj\Debug\SimpleJoiner.csproj.CoreCompileInputs.cache
+C:\Users\mwa73\Documents\SimpleJoiner\obj\Debug\SimpleJo.BB4D25B8.Up2Date
+C:\Users\mwa73\Documents\SimpleJoiner\obj\Debug\SimpleJoiner.exe
+C:\Users\mwa73\Documents\SimpleJoiner\obj\Debug\SimpleJoiner.pdb
