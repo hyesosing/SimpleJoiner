@@ -12,3 +12,17 @@ C:\Users\mwa73\Documents\SimpleJoiner\obj\Release\SimpleJoiner.csproj.CoreCompil
 C:\Users\mwa73\Documents\SimpleJoiner\obj\Release\SimpleJo.BB4D25B8.Up2Date
 C:\Users\mwa73\Documents\SimpleJoiner\obj\Release\SimpleJoiner.exe
 C:\Users\mwa73\Documents\SimpleJoiner\obj\Release\SimpleJoiner.pdb
+D:\маегавно\SimpleJoiner\bin\Release\SimpleJoiner.exe.config
+D:\маегавно\SimpleJoiner\bin\Release\SimpleJoiner.exe
+D:\маегавно\SimpleJoiner\bin\Release\SimpleJoiner.pdb
+D:\маегавно\SimpleJoiner\bin\Release\MetroFramework.Design.dll
+D:\маегавно\SimpleJoiner\bin\Release\MetroFramework.dll
+D:\маегавно\SimpleJoiner\bin\Release\MetroFramework.Fonts.dll
+D:\маегавно\SimpleJoiner\obj\Release\SimpleJoiner.csproj.AssemblyReference.cache
+D:\маегавно\SimpleJoiner\obj\Release\SimpleJoiner.MainForm.resources
+D:\маегавно\SimpleJoiner\obj\Release\SimpleJoiner.Properties.Resources.resources
+D:\маегавно\SimpleJoiner\obj\Release\SimpleJoiner.csproj.GenerateResource.cache
+D:\маегавно\SimpleJoiner\obj\Release\SimpleJoiner.csproj.CoreCompileInputs.cache
+D:\маегавно\SimpleJoiner\obj\Release\SimpleJo.BB4D25B8.Up2Date
+D:\маегавно\SimpleJoiner\obj\Release\SimpleJoiner.exe
+D:\маегавно\SimpleJoiner\obj\Release\SimpleJoiner.pdb
